@@ -843,9 +843,11 @@ class MutagenHandler:
                     if field == 'composer' and value:
                         value = self.normalize_composer_text(value)
                     
-                    # Handle empty values by using space placeholder instead of deletion
+                    # Empty value means "delete this field", not "store a space".
                     if not value:
-                        value = ' '  # Use space placeholder for empty fields
+                        if audio_file.tags is not None and tag_name in audio_file.tags:
+                            del audio_file.tags[tag_name]
+                        continue
                     
                     # Create appropriate ID3 frames
                     if tag_name == 'TPE1':
@@ -884,7 +886,9 @@ class MutagenHandler:
                         if frame_id.startswith('T') and frame_id != 'TXXX':
                             # This is likely a text frame
                             if not value:
-                                value = ' '  # Use space placeholder for empty fields
+                                if audio_file.tags is not None and frame_id in audio_file.tags:
+                                    del audio_file.tags[frame_id]
+                                continue
                             
                             try:
                                 audio_file.tags[frame_id] = frame_class(encoding=3, text=value)
@@ -904,8 +908,9 @@ class MutagenHandler:
                     txxx_key = f'TXXX:{field}'
                     
                     if not value:
-                        # Use space placeholder for empty custom fields
-                        value = ' '
+                        if audio_file.tags is not None and txxx_key in audio_file.tags:
+                            del audio_file.tags[txxx_key]
+                        continue
                     
                     # Add or update TXXX frame
                     audio_file.tags[txxx_key] = TXXX(
@@ -932,10 +937,11 @@ class MutagenHandler:
                     if field == 'composer' and value:
                         value = self.normalize_composer_text(value)
                     
-                    # Even though Vorbis formats theoretically support empty strings,
-                    # Mutagen still removes them on save. Use space placeholder.
+                    # Empty value means "delete this field". Mutagen dropping empty
+                    # strings on save is the desired behaviour, not a bug to work around.
                     if not value:
-                        audio_file[tag_name] = ' '
+                        if tag_name in audio_file:
+                            del audio_file[tag_name]
                     else:
                         audio_file[tag_name] = value
                 
@@ -947,9 +953,10 @@ class MutagenHandler:
                     # Use uppercase for consistency
                     field_key = field.upper()
                     
-                    # Use space placeholder for empty custom fields too
+                    # Empty value means "delete this field".
                     if not value:
-                        audio_file[field_key] = ' '
+                        if field_key in audio_file:
+                            del audio_file[field_key]
                     else:
                         audio_file[field_key] = value
             
@@ -967,9 +974,11 @@ class MutagenHandler:
                     if field == 'composer' and value:
                         value = self.normalize_composer_text(value)
                     
-                    # Handle empty values with space placeholder
+                    # Empty value means "delete this field".
                     if not value:
-                        value = ' '
+                        if atom in audio_file:
+                            del audio_file[atom]
+                        continue
                     
                     # Special handling for track/disc
                     if field == 'track':
@@ -1001,8 +1010,9 @@ class MutagenHandler:
                         key = f"----:com.apple.iTunes:{field}"
                     
                     if not value:
-                        # Use space placeholder for empty custom fields
-                        value = ' '
+                        if key in audio_file:
+                            del audio_file[key]
+                        continue
                     
                     # MP4 freeform atoms store bytes
                     audio_file[key] = [value.encode('utf-8')]
@@ -1022,7 +1032,9 @@ class MutagenHandler:
                         value = self.normalize_composer_text(value)
                     
                     if not value:
-                        value = ' '
+                        if tag_name in audio_file:
+                            del audio_file[tag_name]
+                        continue
                     
                     audio_file[tag_name] = value
                 
@@ -1035,7 +1047,9 @@ class MutagenHandler:
                     field_key = f"WM/{field}" if not field.startswith('WM/') else field
                     
                     if not value:
-                        value = ' '
+                        if field_key in audio_file:
+                            del audio_file[field_key]
+                        continue
                     
                     audio_file[field_key] = value
             
@@ -1057,9 +1071,11 @@ class MutagenHandler:
                     if field == 'composer' and value:
                         value = self.normalize_composer_text(value)
                     
-                    # Handle empty values with space placeholder (same as MP3)
+                    # Empty value means "delete this field" (same as MP3).
                     if not value:
-                        value = ' '
+                        if audio_file.tags is not None and tag_name in audio_file.tags:
+                            del audio_file.tags[tag_name]
+                        continue
                     
                     # Create appropriate ID3 frames (same as MP3)
                     if tag_name == 'TPE1':
@@ -1098,7 +1114,9 @@ class MutagenHandler:
                         if frame_id.startswith('T') and frame_id != 'TXXX':
                             # This is likely a text frame
                             if not value:
-                                value = ' '  # Use space placeholder for empty fields
+                                if audio_file.tags is not None and frame_id in audio_file.tags:
+                                    del audio_file.tags[frame_id]
+                                continue
                             
                             try:
                                 audio_file.tags[frame_id] = frame_class(encoding=3, text=value)
@@ -1118,8 +1136,9 @@ class MutagenHandler:
                     txxx_key = f'TXXX:{field}'
                     
                     if not value:
-                        # Use space placeholder for empty custom fields
-                        value = ' '
+                        if audio_file.tags is not None and txxx_key in audio_file.tags:
+                            del audio_file.tags[txxx_key]
+                        continue
                     
                     # Add or update TXXX frame
                     audio_file.tags[txxx_key] = TXXX(
@@ -1143,7 +1162,9 @@ class MutagenHandler:
                         value = self.normalize_composer_text(value)
                     
                     if not value:
-                        value = ' '
+                        if tag_name in audio_file:
+                            del audio_file[tag_name]
+                        continue
                     
                     audio_file[tag_name] = value
                 
@@ -1153,7 +1174,9 @@ class MutagenHandler:
                         continue
                     
                     if not value:
-                        value = ' '
+                        if field in audio_file:
+                            del audio_file[field]
+                        continue
                     
                     audio_file[field] = value
             
