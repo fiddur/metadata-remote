@@ -710,13 +710,11 @@ def create_custom_field():
                                   field_name in all_discovered or
                                   field_name.upper() in all_discovered)
                     
-                    # Determine appropriate value to write
+                    # An empty value means "remove this field". Pass it through
+                    # untouched: write_custom_field's per-format helpers already
+                    # delete the field when the value is falsy. Substituting a
+                    # space here is what used to defeat that and leave " " behind.
                     value_to_write = field_value
-                    if not value_to_write:
-                        from core.file_utils import get_file_format
-                        _, _, base_format = get_file_format(file_path)
-                        if base_format not in ['flac', 'ogg', 'opus']:
-                            value_to_write = ' '
                     
                     if field_exists:
                         # Get existing value for history
@@ -779,13 +777,8 @@ def create_custom_field():
                           field_name.upper() in all_discovered)
             
             
-            # Handle empty values appropriately
+            # An empty value means "remove this field" - see above.
             value_to_write = field_value
-            if not value_to_write:
-                from core.file_utils import get_file_format
-                _, _, base_format = get_file_format(full_path)
-                if base_format not in ['flac', 'ogg', 'opus']:
-                    value_to_write = ' '
             
             # Write the field
             success = mutagen_handler.write_custom_field(full_path, field_name, value_to_write)
