@@ -82,8 +82,8 @@
                 // Check if it's a WavPack file
                 const isWavPack = filepath.toLowerCase().endsWith('.wv');
                 const streamUrl = isWavPack 
-                    ? `/stream/wav/${encodeURIComponent(filepath)}`
-                    : `/stream/${encodeURIComponent(filepath)}`;
+                    ? `${window.MetadataRemote.basePath}/stream/wav/${encodeURIComponent(filepath)}`
+                    : `${window.MetadataRemote.basePath}/stream/${encodeURIComponent(filepath)}`;
                 
                 this.audioPlayer.src = streamUrl;
                 this.audioPlayer.play()

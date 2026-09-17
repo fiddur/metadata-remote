@@ -24,6 +24,13 @@
 // Create namespace if it doesn't exist
 window.MetadataRemote = window.MetadataRemote || {};
 
+// Base path for every request this module makes. Empty when the app is served
+// at a domain root; set by the template from Flask's request.script_root when
+// it is reverse-proxied under a sub-path (e.g. "/tags"). Flask already honours
+// X-Forwarded-Prefix via ProxyFix(x_prefix=1) for url_for(), but these fetches
+// are built in the browser and would otherwise escape the prefix.
+window.MetadataRemote.basePath = window.MetadataRemote.basePath || '';
+
 // API module
 window.MetadataRemote.API = {
     /**
@@ -34,7 +41,7 @@ window.MetadataRemote.API = {
      */
     async call(url, options = {}) {
         try {
-            const response = await fetch(url, options);
+            const response = await fetch(window.MetadataRemote.basePath + url, options);
             if (!response.ok) {
                 const data = await response.json();
                 throw new Error(data.message || data.error || 'Request failed');

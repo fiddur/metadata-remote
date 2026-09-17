@@ -421,6 +421,15 @@
     </div>
   
     <!-- Core modules -->
+    <!-- Base path, for being served under a reverse-proxy sub-path.
+         Flask's request.script_root is populated from X-Forwarded-Prefix by
+         ProxyFix(x_prefix=1), and is empty when served at a domain root, so
+         this is a no-op in the default deployment. Must come before api.js.
+         tojson emits a properly quoted and escaped JS string literal. -->
+    <script>
+        window.MetadataRemote = window.MetadataRemote || {};
+        window.MetadataRemote.basePath = {{ request.script_root|tojson }};
+    </script>
     <script src="{{ url_for('static', filename='js/state.js') }}"></script>
     <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 

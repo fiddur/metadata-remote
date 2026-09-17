@@ -108,7 +108,7 @@
             State.inferenceActive[field] = true;
             
             try {
-                const response = await fetch(`/infer/${encodeURIComponent(State.currentFile)}/${field}`, {
+                const response = await fetch(`${window.MetadataRemote.basePath}/infer/${encodeURIComponent(State.currentFile)}/${field}`, {
                     signal: abortController.signal
                 });
                 
