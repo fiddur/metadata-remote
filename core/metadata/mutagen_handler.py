@@ -907,10 +907,28 @@ class MutagenHandler:
                     # Create TXXX frame key
                     txxx_key = f'TXXX:{field}'
                     
+                    # TXXX frames are keyed by their description, and ID3 treats
+                    # those keys as case-sensitive - so writing "dance" onto a
+                    # file that already carries "DANCE" leaves two frames with
+                    # different values, and readers pick whichever they find
+                    # first. The spec allows only one TXXX per description, so
+                    # collapse onto the spelling already in the file.
+                    variants = []
+                    if audio_file.tags is not None:
+                        variants = [k for k in audio_file.tags.keys()
+                                    if k.lower() == txxx_key.lower()]
+                    if variants:
+                        txxx_key = variants[0]
+                        field = txxx_key[5:]
+                    
                     if not value:
-                        if audio_file.tags is not None and txxx_key in audio_file.tags:
-                            del audio_file.tags[txxx_key]
+                        for stale in variants:
+                            del audio_file.tags[stale]
                         continue
+                    
+                    # Drop any case-variant duplicates a previous version left
+                    for stale in variants[1:]:
+                        del audio_file.tags[stale]
                     
                     # Add or update TXXX frame
                     audio_file.tags[txxx_key] = TXXX(
@@ -1135,10 +1153,28 @@ class MutagenHandler:
                     # Create TXXX frame key
                     txxx_key = f'TXXX:{field}'
                     
+                    # TXXX frames are keyed by their description, and ID3 treats
+                    # those keys as case-sensitive - so writing "dance" onto a
+                    # file that already carries "DANCE" leaves two frames with
+                    # different values, and readers pick whichever they find
+                    # first. The spec allows only one TXXX per description, so
+                    # collapse onto the spelling already in the file.
+                    variants = []
+                    if audio_file.tags is not None:
+                        variants = [k for k in audio_file.tags.keys()
+                                    if k.lower() == txxx_key.lower()]
+                    if variants:
+                        txxx_key = variants[0]
+                        field = txxx_key[5:]
+                    
                     if not value:
-                        if audio_file.tags is not None and txxx_key in audio_file.tags:
-                            del audio_file.tags[txxx_key]
+                        for stale in variants:
+                            del audio_file.tags[stale]
                         continue
+                    
+                    # Drop any case-variant duplicates a previous version left
+                    for stale in variants[1:]:
+                        del audio_file.tags[stale]
                     
                     # Add or update TXXX frame
                     audio_file.tags[txxx_key] = TXXX(
@@ -1983,7 +2019,18 @@ class MutagenHandler:
             # Create TXXX frame key
             txxx_key = f'TXXX:{field_name}'
             
+            # TXXX descriptions are case-sensitive keys, so "dance" and "DANCE"
+            # would end up as two frames holding different values. Reuse the
+            # spelling already in the file - same reasoning as write_metadata.
+            variants = [k for k in tags.keys() if k.lower() == txxx_key.lower()]
+            if variants:
+                txxx_key = variants[0]
+                field_name = txxx_key[5:]
+            
             if field_value:
+                # Drop any case-variant duplicates left by earlier versions
+                for stale in variants[1:]:
+                    del tags[stale]
                 # Add or update TXXX frame for custom fields
                 tags[txxx_key] = TXXX(
                     encoding=3,  # UTF-8
@@ -1991,9 +2038,9 @@ class MutagenHandler:
                     text=[field_value]
                 )
             else:
-                # Remove field if empty value
-                if txxx_key in tags:
-                    del tags[txxx_key]
+                # Remove field if empty value, in every spelling present
+                for stale in variants:
+                    del tags[stale]
             
             tags.save(filepath)
             return True
